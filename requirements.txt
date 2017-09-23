@@ -1,0 +1,7 @@
+pymorphy2
+pymorphy2-dicts-ru
+nltk
+gensim
+scikit-learn
+pandas
+jupyter
