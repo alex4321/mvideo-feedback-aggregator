@@ -120,7 +120,7 @@ class Extractor:
                     result.append(token)
             else:
                 result.append(token)
-        return " ".join(result)
+        return " ".join(result).replace(" ,", ",")
 
     def transform(self, texts, ngram_min, ngram_max, top_tfidf_features):
         _texts = []
