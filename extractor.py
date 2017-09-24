@@ -130,6 +130,8 @@ class Extractor:
         texts = _texts
         converted_texts = [" ".join(self._tokenize(text)) for text in texts]
         features = self._top_features(converted_texts, ngram_min, ngram_max, top_tfidf_features)
+        if len(features) == 0:
+            return []
         distances = self._feature_distances(features)
         choosen_features = self._choose_features(features, distances)
 
