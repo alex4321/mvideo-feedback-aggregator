@@ -1,7 +1,7 @@
 from functools import lru_cache
 import re
 from gensim.models import Word2Vec
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenize, wordpunct_tokenize
 import numpy as np
 from pymorphy2 import MorphAnalyzer
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -107,7 +107,27 @@ class Extractor:
             text = rule(text)
         return text
 
+    def _norm(self, text):
+        tokens = wordpunct_tokenize(text)
+        result = []
+        for token in tokens:
+            parse = self.morph.parse(token)
+            if len(parse) > 0 and parse[0].tag.POS:
+                inflect = parse[0].inflect({"nomn"})
+                if inflect:
+                    result.append(inflect.word)
+                else:
+                    result.append(token)
+            else:
+                result.append(token)
+        return " ".join(result)
+
     def transform(self, texts, ngram_min, ngram_max, top_tfidf_features):
+        _texts = []
+        for text in texts:
+            add_texts = re.split("[,.]|([ ]+и[ ]+)", text)
+            _texts += [item for item in add_texts if item is not None]
+        texts = _texts
         converted_texts = [" ".join(self._tokenize(text)) for text in texts]
         features = self._top_features(converted_texts, ngram_min, ngram_max, top_tfidf_features)
         distances = self._feature_distances(features)
@@ -122,5 +142,6 @@ class Extractor:
                  lambda text: re.sub("^\w+_precl", "", text),
                  lambda text: re.sub("\w+_precl$", "", text),
                  lambda text: re.sub("_[a-z]+", "", text),
-                 lambda text: text.strip()]
+                 lambda text: text.strip(),
+                 lambda text: self._norm(text)]
         return self._apply_rules(rules, choosen_features)
